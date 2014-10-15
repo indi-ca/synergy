@@ -187,6 +187,7 @@ CScreen::screensaver(bool activate)
 void
 CScreen::keyDown(KeyID id, KeyModifierMask mask, KeyButton button)
 {
+    LOG((CLOG_DEBUG "this is indika"));
 	// check for ctrl+alt+del emulation
 	if (id == kKeyDelete &&
 		(mask & (KeyModifierControl | KeyModifierAlt)) ==

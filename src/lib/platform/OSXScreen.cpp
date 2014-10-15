@@ -1299,12 +1299,14 @@ COSXScreen::displayReconfigurationCallback(CGDirectDisplayID displayID, CGDispla
 bool
 COSXScreen::onKey(CGEventRef event)
 {
+    LOG((CLOG_DEBUG "indika: onKey"));
 	CGEventType eventKind = CGEventGetType(event);
 
 	// get the key and active modifiers
 	UInt32 virtualKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
 	CGEventFlags macMask = CGEventGetFlags(event);
 	LOG((CLOG_DEBUG1 "event: Key event kind: %d, keycode=%d", eventKind, virtualKey));
+    LOG((CLOG_DEBUG "indika: event: Key event kind: %d, keycode=%d", eventKind, virtualKey));
 
 	// Special handling to track state of modifiers
 	if (eventKind == kCGEventFlagsChanged) {
@@ -1385,6 +1387,8 @@ COSXScreen::onKey(CGEventRef event)
 	if (button == 0) {
 		return false;
 	}
+
+    LOG((CLOG_DEBUG "indika: KeyButton: %d", button));
 
 	// check for AltGr in mask.  if set we send neither the AltGr nor
 	// the super modifiers to clients then remove AltGr before passing
