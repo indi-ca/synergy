@@ -2,11 +2,11 @@
  * synergy -- mouse and keyboard sharing utility
  * Copyright (C) 2012 Bolton Software Ltd.
  * Copyright (C) 2002 Chris Schoeneman
- * 
+ *
  * This package is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * found in the file COPYING that should have accompanied this file.
- * 
+ *
  * This package is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -139,11 +139,11 @@ CClient::connect()
 		// being shuttled between various networks).  patch by Brent
 		// Priddy.
 		m_serverAddress.resolve();
-		
+
 		// m_serverAddress will be null if the hostname address is not reolved
 		if (m_serverAddress.getAddress() != NULL) {
 		  // to help users troubleshoot, show server host name (issue: 60)
-		  LOG((CLOG_NOTE "connecting to '%s': %s:%i", 
+		  LOG((CLOG_NOTE "connecting to '%s': %s:%i",
 		  m_serverAddress.getHostname().c_str(),
 		  ARCH->addrToString(m_serverAddress.getAddress()).c_str(),
 		  m_serverAddress.getPort()));
@@ -306,6 +306,8 @@ CClient::setClipboardDirty(ClipboardID, bool)
 void
 CClient::keyDown(KeyID id, KeyModifierMask mask, KeyButton button)
 {
+	// LOG((CLOG_DEBUG "indika: CClient::keyDown"));
+	LOG((CLOG_DEBUG "indika: CClient::keyDown: KeyID: %d, KeyModifierMask=%d, KeyButton=%d", id, mask, button));
  	m_screen->keyDown(id, mask, button);
 }
 
@@ -746,7 +748,7 @@ CClient::writeToDropDirThread(void*)
 	while (m_screen->isFakeDraggingStarted()) {
 		ARCH->sleep(.1f);
 	}
-	
+
 	CDropHelper::writeToDir(m_screen->getDropTarget(), m_dragFileList,
 					m_receivedFileData);
 }
@@ -779,7 +781,7 @@ CClient::dragInfoReceived(UInt32 fileNum, CString data)
 	}
 
 	CDragInformation::parseDragInfo(m_dragFileList, fileNum, data);
-	
+
 	m_screen->startDraggingFiles(m_dragFileList);
 }
 
