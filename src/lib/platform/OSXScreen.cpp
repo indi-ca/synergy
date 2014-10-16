@@ -1306,7 +1306,7 @@ COSXScreen::onKey(CGEventRef event)
 	UInt32 virtualKey = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
 	CGEventFlags macMask = CGEventGetFlags(event);
 	LOG((CLOG_DEBUG1 "event: Key event kind: %d, keycode=%d", eventKind, virtualKey));
-    LOG((CLOG_DEBUG "indika: event: Key event kind: %d, keycode=%d", eventKind, virtualKey));
+
 
 	// Special handling to track state of modifiers
 	if (eventKind == kCGEventFlagsChanged) {
@@ -1388,7 +1388,19 @@ COSXScreen::onKey(CGEventRef event)
 		return false;
 	}
 
-    LOG((CLOG_DEBUG "indika: KeyButton: %d", button));
+    if (m_isOnScreen){
+        LOG((CLOG_DEBUG "indika: on Wings"));
+    }
+    else
+    {
+        LOG((CLOG_DEBUG "indika: on Cobalt"));
+    }
+
+//    LOG((CLOG_DEBUG "indika: Button before %d", button));
+//    if (button == 51) {
+//        button = 22;
+//    }
+
 
 	// check for AltGr in mask.  if set we send neither the AltGr nor
 	// the super modifiers to clients then remove AltGr before passing
@@ -1414,9 +1426,26 @@ COSXScreen::onKey(CGEventRef event)
 	// send key events
 	for (COSXKeyState::CKeyIDs::const_iterator i = keys.begin();
 							i != keys.end(); ++i) {
-		m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-							*i, sendMask, 1, button);
-	}
+
+
+        // Mucking around
+//        if (*i == 42){
+//            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+//                    42, 1, 1, button);
+//
+//        }
+//        else
+//        {
+        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+                *i, sendMask, 1, button);
+
+        //}
+
+        //LOG((CLOG_DEBUG "indika: Sending some id [id=%d]", *i));
+        LOG((CLOG_DEBUG "indika: eventSend: [kind %d], [KeyId=%d] [keycode=%d] [KeyButton=%d]", eventKind, *i, virtualKey, button));
+
+
+    }
 
 	return true;
 }
