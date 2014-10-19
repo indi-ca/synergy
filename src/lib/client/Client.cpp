@@ -306,6 +306,8 @@ CClient::setClipboardDirty(ClipboardID, bool)
 void
 CClient::keyDown(KeyID id, KeyModifierMask mask, KeyButton button)
 {
+	// LOG((CLOG_DEBUG "indika: CClient::keyDown"));
+	LOG((CLOG_DEBUG "indika: CClient::keyDown: KeyID: %d, KeyModifierMask=%d, KeyButton=%d", id, mask, button));
  	m_screen->keyDown(id, mask, button);
 }
 
