@@ -1299,7 +1299,6 @@ COSXScreen::displayReconfigurationCallback(CGDirectDisplayID displayID, CGDispla
 bool
 COSXScreen::onKey(CGEventRef event)
 {
-    LOG((CLOG_DEBUG "indika: onKey"));
 	CGEventType eventKind = CGEventGetType(event);
 
 	// get the key and active modifiers
@@ -1389,13 +1388,6 @@ COSXScreen::onKey(CGEventRef event)
 	}
 
 
-
-//    LOG((CLOG_DEBUG "indika: Button before %d", button));
-//    if (button == 51) {
-//        button = 22;
-//    }
-
-
 	// check for AltGr in mask.  if set we send neither the AltGr nor
 	// the super modifiers to clients then remove AltGr before passing
 	// the modifiers to onKey.
@@ -1418,10 +1410,6 @@ COSXScreen::onKey(CGEventRef event)
 	}
 
 
-	// {
-
-
-
 	// send key events
 	for (COSXKeyState::CKeyIDs::const_iterator i = keys.begin();
 							i != keys.end(); ++i) {
@@ -1435,36 +1423,125 @@ COSXScreen::onKey(CGEventRef event)
 	    // On Cobalt
 	    else
 	    {
-	    	if (sendMask == 0)
+	    	LOG((CLOG_DEBUG "indika: sendMask %d [%o]", sendMask, sendMask));
+
+
+	    	// Not shift
+	    	if (!(sendMask & (1 << 0)))
 	    	{
-		        if (button == 20)
+		        if (button == 51)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND [..."));
+		            // LOG((CLOG_DEBUG "indika: FOUND $..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 22);
+		        }
+		        //WHY ARE YOU SPECIAL?
+		        // else if (button == 10)
+		        // {
+		        //     sendMask |= 1 << 0;
+		        //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		        //             *i, sendMask, 1, 22);
+		        //     //    LOG((CLOG_DEBUG "indika: FOUND k..."));
+			       //  // if (sendMask & (1 << 4)) {
+			       //  // 	LOG((CLOG_DEBUG "indika: found command"));
+			       //  //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+			       //  //             *i, sendMask, 1, 22);
+			       //  // 	}
+			       //  // 	else
+			       //  // 	{
+			       //  //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+			       //  //             *i, sendMask, 1, 22);
+
+			       //  // 	}
+		        // }
+		        else if (button == 19)
+		        {
+		            // LOG((CLOG_DEBUG "indika: FOUND ~..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 51);
+		        }
+		        else if (button == 20)
+		        {
+		            // LOG((CLOG_DEBUG "indika: FOUND [..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
 		                    *i, sendMask, 1, 34);
 		        }
 		        else if (button == 21)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND {..."));
+		            // LOG((CLOG_DEBUG "indika: FOUND {..."));
+		            sendMask |= 1 << 0;
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 1, 1, 34);
+		                    *i, sendMask, 1, 34);
 		        }
 		        else if (button == 22)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND }..."));
-		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 1, 1, 31);
-		        }
-		        else if (button == 24)
-		        {
-		            LOG((CLOG_DEBUG "indika: FOUND ]..."));
+		            // LOG((CLOG_DEBUG "indika: FOUND }..."));
+		            sendMask |= 1 << 0;
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
 		                    *i, sendMask, 1, 31);
 		        }
-		        else if (19 <= button && button <= 30){
-		            LOG((CLOG_DEBUG "indika: FOUND IT..."));
+		        else if (button == 24)
+		        {
+		            // LOG((CLOG_DEBUG "indika: FOUND ]..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 1, 1, button);
+		                    *i, sendMask, 1, 31);
+		        }
+		        else if (button == 23)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND =..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 25);
+		        }
+		        else if (button == 27)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND &..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 27);
+		        }
+		        else if (button == 29)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND *..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 29);
+		        }
+		        else if (button == 26)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND +..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 25);
+		        }
+		        else if (button == 30)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND ^..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 23);
+		        }
+		        else if (button == 28)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND (..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 26);
+		        }
+		        else if (button == 25)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND )..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 30);
+		        }
+		        else if (button == 43)
+		        {
+		            // LOG((CLOG_DEBUG "indika: FOUND #..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 21);
 		        }
 		        else
 		        {
@@ -1472,42 +1549,96 @@ COSXScreen::onKey(CGEventRef event)
 			                *i, sendMask, 1, button);
 		        }
 	    	}
-	    	else if (sendMask == 1){
-		        if (button == 20)
+	    	// Else if shift
+	    	else {
+		        if (button == 51)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND 2..."));
+		            LOG((CLOG_DEBUG "indika: FOUND $..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 0, 1, 20);
+		                    *i, sendMask, 1, 43);
+		        }
+		        else if (button == 19)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 1..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 19);
+		        }
+		        else if (button == 20)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 2..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 20);
 		        }
 		        else if (button == 21)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND 3..."));
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 3..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 0, 1, 21);
+		                    *i, sendMask, 1, 21);
 		        }
 		        else if (button == 22)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND 4..."));
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 4..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 0, 1, 22);
+		                    *i, sendMask, 1, 22);
 		        }
 		        else if (button == 24)
 		        {
-		            LOG((CLOG_DEBUG "indika: FOUND 5..."));
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 5..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                    *i, 0, 1, 24);
+		                    *i, sendMask, 1, 24);
+		        }
+		        else if (button == 23)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 6..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 23);
+		        }
+		        else if (button == 27)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 7..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 27);
+		        }
+		        else if (button == 29)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 8..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 29);
+		        }
+		        else if (button == 26)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 9..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 26);
+		        }
+		        else if (button == 30)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            // LOG((CLOG_DEBUG "indika: FOUND 0..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 30);
+		        }
+		        else if (button == 25)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            LOG((CLOG_DEBUG "indika: FOUND `..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 51);
 		        }
 		        else
 		        {
 			        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
 			                *i, sendMask, 1, button);
 		        }
-	    	}
-	    	else
-	    	{
-		        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-		                *i, sendMask, 1, button);
-
 	    	}
 
 	    }
