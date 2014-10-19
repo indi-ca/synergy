@@ -509,20 +509,23 @@ COSXKeyState::fakeKey(const Keystroke& keystroke)
 {
 	switch (keystroke.m_type) {
 	case Keystroke::kButton: {
-		
+
 		KeyButton button = keystroke.m_data.m_button.m_button;
 		bool keyDown = keystroke.m_data.m_button.m_press;
 		UInt32 client = keystroke.m_data.m_button.m_client;
 		CGEventSourceRef source = 0;
+
+
+
 		CGKeyCode virtualKey = mapKeyButtonToVirtualKey(button);
-		
-		LOG((CLOG_DEBUG1
-			"  button=0x%04x virtualKey=0x%04x keyDown=%s client=0x%04x",
-			button, virtualKey, keyDown ? "down" : "up", client));
+
+		LOG((CLOG_DEBUG
+			"  button=0x%04x[%d] virtualKey=0x%04x[%d] keyDown=%s client=0x%04x",
+			button, button, virtualKey, virtualKey, keyDown ? "down" : "up", client));
 
 		CGEventRef ref = CGEventCreateKeyboardEvent(
 			source, virtualKey, keyDown);
-		
+
 		if (ref == NULL) {
 			LOG((CLOG_CRIT "unable to create keyboard event for keystroke"));
 			return;
