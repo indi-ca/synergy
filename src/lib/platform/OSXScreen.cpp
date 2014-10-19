@@ -2,11 +2,11 @@
  * synergy -- mouse and keyboard sharing utility
  * Copyright (C) 2012 Bolton Software Ltd.
  * Copyright (C) 2004 Chris Schoeneman
- * 
+ *
  * This package is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * found in the file COPYING that should have accompanied this file.
- * 
+ *
  * This package is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -114,10 +114,10 @@ COSXScreen::COSXScreen(IEventQueue* events, bool isPrimary, bool autoShowHideCur
 		updateScreenShape(m_displayID, 0);
 		m_screensaver = new COSXScreenSaver(m_events, getEventTarget());
 		m_keyState	  = new COSXKeyState(m_events);
-		
+
 		// only needed when running as a server.
 		if (m_isPrimary) {
-		
+
 #if defined(MAC_OS_X_VERSION_10_9)
 			// we can't pass options to show the dialog, this must be done by the gui.
 			if (!AXIsProcessTrusted()) {
@@ -130,7 +130,7 @@ COSXScreen::COSXScreen(IEventQueue* events, bool isPrimary, bool autoShowHideCur
 			}
 #endif
 		}
-		
+
 		// install display manager notification handler
 #if defined(MAC_OS_X_VERSION_10_5)
 		CGDisplayRegisterReconfigurationCallback(displayReconfigurationCallback, this);
@@ -260,7 +260,7 @@ COSXScreen::~COSXScreen()
 
 	delete m_keyState;
 	delete m_screensaver;
-	
+
 #if defined(MAC_OS_X_VERSION_10_7)
 	delete m_carbonLoopMutex;
 	delete m_carbonLoopReady;
@@ -315,7 +315,7 @@ COSXScreen::warpCursor(SInt32 x, SInt32 y)
 	pos.x = x;
 	pos.y = y;
 	CGWarpMouseCursorPosition(pos);
-	
+
 	// save new cursor position
 	m_xCursor        = x;
 	m_yCursor        = y;
@@ -367,7 +367,7 @@ COSXScreen::registerHotKey(KeyID key, KeyModifierMask mask)
 		LOG((CLOG_DEBUG "could not map hotkey id=%04x mask=%04x", key, mask));
 		return 0;
 	}
-	
+
 	// choose hotkey id
 	UInt32 id;
 	if (!m_oldHotKeyIDs.empty()) {
@@ -393,7 +393,7 @@ COSXScreen::registerHotKey(KeyID key, KeyModifierMask mask)
 	}
 	else {
 		EventHotKeyID hkid = { 'SNRG', (UInt32)id };
-		OSStatus status = RegisterEventHotKey(macKey, macMask, hkid, 
+		OSStatus status = RegisterEventHotKey(macKey, macMask, hkid,
 								GetApplicationEventTarget(), 0,
 								&ref);
 		okay = (status == noErr);
@@ -408,7 +408,7 @@ COSXScreen::registerHotKey(KeyID key, KeyModifierMask mask)
 	}
 
 	m_hotKeys.insert(std::make_pair(id, CHotKeyItem(ref, macKey, macMask)));
-	
+
 	LOG((CLOG_DEBUG "registered hotkey %s (id=%04x mask=%04x) as id=%d", CKeyMap::formatKey(key, mask).c_str(), key, mask, id));
 	return id;
 }
@@ -509,7 +509,7 @@ COSXScreen::postMouseEvent(CGPoint& pos) const
 			}
 		}
 	}
-	
+
 	CGEventType type = kCGEventMouseMoved;
 
 	SInt8 button = m_buttonState.getFirstButtonDown();
@@ -520,7 +520,7 @@ COSXScreen::postMouseEvent(CGPoint& pos) const
 
 	CGEventRef event = CGEventCreateMouseEvent(NULL, type, pos, button);
 	CGEventPost(kCGHIDEventTap, event);
-	
+
 	CFRelease(event);
 }
 
@@ -529,7 +529,7 @@ COSXScreen::fakeMouseButton(ButtonID id, bool press)
 {
 	NXEventHandle handle = NXOpenEventStatus();
 	double clickTime = NXClickTime(handle);
-	
+
 	if ((ARCH->time() - m_lastDoubleClick) <= clickTime) {
 		// drop all down and up fakes immedately after a double click.
 		// TODO: perhaps there is a better way to do this, usually in
@@ -540,13 +540,13 @@ COSXScreen::fakeMouseButton(ButtonID id, bool press)
 			press ? "press" : "release"));
 		return;
 	}
-	
+
 	// Buttons are indexed from one, but the button down array is indexed from zero
 	UInt32 index = id - kButtonLeft;
 	if (index >= NumButtonIDs) {
 		return;
 	}
-	
+
 	CGPoint pos;
 	if (!m_cursorPosValid) {
 		SInt32 x, y;
@@ -570,51 +570,51 @@ COSXScreen::fakeMouseButton(ButtonID id, bool press)
 		diff <= maxDiff) {
 
 		LOG((CLOG_DEBUG1 "faking mouse left double click"));
-		
+
 		// finder does not seem to detect double clicks from two separate
 		// CGEventCreateMouseEvent calls. so, if we detect a double click we
 		// use CGEventSetIntegerValueField to tell the OS.
-		// 
-		// the caveat here is that findor will see this as a single click 
+		//
+		// the caveat here is that findor will see this as a single click
 		// followed by a double click (even though there should be only a
 		// double click). this may cause weird behaviour in other apps.
 		//
 		// for some reason using the old CGPostMouseEvent function, doesn't
 		// cause double clicks (though i'm sure it did work at some point).
-		
+
 		CGEventRef event = CGEventCreateMouseEvent(
 			NULL, kCGEventLeftMouseDown, pos, kCGMouseButtonLeft);
-		
+
 		CGEventSetIntegerValueField(event, kCGMouseEventClickState, 2);
 		m_buttonState.set(index, kMouseButtonDown);
 		CGEventPost(kCGHIDEventTap, event);
-		
+
 		CGEventSetType(event, kCGEventLeftMouseUp);
 		m_buttonState.set(index, kMouseButtonUp);
 		CGEventPost(kCGHIDEventTap, event);
-		
+
 		CFRelease(event);
-	
+
 		m_lastDoubleClick = ARCH->time();
 	}
 	else {
-		
+
 		// ... otherwise, perform a single press or release as normal.
-		
+
 		MouseButtonState state = press ? kMouseButtonDown : kMouseButtonUp;
-		
+
 		LOG((CLOG_DEBUG1 "faking mouse button id: %d press: %s", id, press ? "pressed" : "released"));
-		
+
 		MouseButtonEventMapType thisButtonMap = MouseButtonEventMap[index];
 		CGEventType type = thisButtonMap[state];
-		
+
 		CGEventRef event = CGEventCreateMouseEvent(NULL, type, pos, index);
-	
+
 		m_buttonState.set(index, state);
 		CGEventPost(kCGHIDEventTap, event);
-		
+
 		CFRelease(event);
-	
+
 		m_lastSingleClick = ARCH->time();
 		m_lastSingleClickXCursor = m_xCursor;
 		m_lastSingleClickYCursor = m_yCursor;
@@ -624,7 +624,7 @@ COSXScreen::fakeMouseButton(ButtonID id, bool press)
 			m_getDropTargetThread = new CThread(new TMethodJob<COSXScreen>(
 				this, &COSXScreen::getDropTargetThread));
 		}
-		
+
 		m_draggingStarted = false;
 	}
 }
@@ -634,21 +634,21 @@ COSXScreen::getDropTargetThread(void*)
 {
 #if defined(MAC_OS_X_VERSION_10_7)
 	char* cstr = NULL;
-	
+
 	// wait for 5 secs for the drop destinaiton string to be filled.
 	UInt32 timeout = ARCH->time() + 5;
-	
+
 	while (ARCH->time() < timeout) {
 		CFStringRef cfstr = getCocoaDropTarget();
 		cstr = CFStringRefToUTF8String(cfstr);
 		CFRelease(cfstr);
-		
+
 		if (cstr != NULL) {
 			break;
 		}
 		ARCH->sleep(.1f);
 	}
-	
+
 	if (cstr != NULL) {
 		LOG((CLOG_DEBUG "drop target: %s", cstr));
 		m_dropTarget = cstr;
@@ -669,12 +669,12 @@ COSXScreen::fakeMouseMove(SInt32 x, SInt32 y)
 	if (m_fakeDraggingStarted) {
 		m_buttonState.set(0, kMouseButtonDown);
 	}
-	
+
 	// index 0 means left mouse button
 	if (m_buttonState.test(0)) {
 		m_draggingStarted = true;
 	}
-	
+
 	// synthesize event
 	CGPoint pos;
 	pos.x = x;
@@ -722,7 +722,7 @@ COSXScreen::fakeMouseWheel(SInt32 xDelta, SInt32 yDelta) const
 			NULL, kCGScrollEventUnitLine, 2,
 			mapScrollWheelFromSynergy(yDelta),
 			-mapScrollWheelFromSynergy(xDelta));
-		
+
 		CGEventPost(kCGHIDEventTap, scrollEvent);
 		CFRelease(scrollEvent);
 #else
@@ -799,11 +799,11 @@ COSXScreen::enable()
 
 	if (m_isPrimary) {
 		// FIXME -- start watching jump zones
-		
+
 		// kCGEventTapOptionDefault = 0x00000000 (Missing in 10.4, so specified literally)
 		m_eventTapPort = CGEventTapCreate(kCGHIDEventTap, kCGHeadInsertEventTap, 0,
-										kCGEventMaskForAllEvents, 
-										handleCGInputEvent, 
+										kCGEventMaskForAllEvents,
+										handleCGInputEvent,
 										this);
 	}
 	else {
@@ -818,10 +818,10 @@ COSXScreen::enable()
 
                 // there may be a better way to do this, but we register an event handler even if we're
                 // not on the primary display (acting as a client). This way, if a local event comes in
-                // (either keyboard or mouse), we can make sure to show the cursor if we've hidden it. 
+                // (either keyboard or mouse), we can make sure to show the cursor if we've hidden it.
 		m_eventTapPort = CGEventTapCreate(kCGHIDEventTap, kCGHeadInsertEventTap, 0,
-										kCGEventMaskForAllEvents, 
-										handleCGInputEventSecondary, 
+										kCGEventMaskForAllEvents,
+										handleCGInputEventSecondary,
 										this);
 	}
 
@@ -843,9 +843,9 @@ COSXScreen::disable()
 	if (m_autoShowHideCursor) {
 		showCursor();
 	}
-    
+
 	// FIXME -- stop watching jump zones, stop capturing input
-	
+
 	if (m_eventTapRLSR) {
 		CFRelease(m_eventTapRLSR);
 		m_eventTapRLSR = nullptr;
@@ -889,7 +889,7 @@ COSXScreen::enter()
 		io_registry_entry_t entry = IORegistryEntryFromPath(
 			kIOMasterPortDefault,
 			"IOService:/IOResources/IODisplayWrangler");
-		
+
 		if (entry != MACH_PORT_NULL) {
 			IORegistryEntrySetCFProperty(entry, CFSTR("IORequestIdle"), kCFBooleanFalse);
 			IOObjectRelease(entry);
@@ -906,15 +906,15 @@ bool
 COSXScreen::leave()
 {
     hideCursor();
-    
+
 	if (isDraggingStarted()) {
 		CString& fileList = getDraggingFilename();
-		
+
 		if (!m_isPrimary) {
 			if (fileList.empty() == false) {
 				CClientApp& app = CClientApp::instance();
 				CClient* client = app.getClientPtr();
-				
+
 				CDragInformation di;
 				di.setFilename(fileList);
 				CDragFileList dragFileList;
@@ -924,7 +924,7 @@ COSXScreen::leave()
 					dragFileList, info);
 				client->sendDragInfo(fileCount, info, info.size());
 				LOG((CLOG_DEBUG "send dragging file to server"));
-				
+
 				// TODO: what to do with multiple file or even
 				// a folder
 				client->sendFileToServer(fileList.c_str());
@@ -932,7 +932,7 @@ COSXScreen::leave()
 		}
 		m_draggingStarted = false;
 	}
-	
+
 	if (m_isPrimary) {
 		avoidHesitatingCursor();
 
@@ -949,8 +949,8 @@ COSXScreen::setClipboard(ClipboardID, const IClipboard* src)
 {
 	if(src != NULL) {
 		LOG((CLOG_DEBUG "setting clipboard"));
-		CClipboard::copy(&m_pasteboard, src);	
-	}	
+		CClipboard::copy(&m_pasteboard, src);
+	}
 	return true;
 }
 
@@ -1079,16 +1079,16 @@ COSXScreen::handleSystemEvent(const CEvent& event, void*)
 		}
 		break;
 
-	case kEventClassKeyboard: 
+	case kEventClassKeyboard:
 			switch (GetEventKind(*carbonEvent)) {
 				case kEventHotKeyPressed:
 				case kEventHotKeyReleased:
 					onHotKey(*carbonEvent);
 					break;
 			}
-			
+
 			break;
-			
+
 	case kEventClassWindow:
 		SendEventToWindow(*carbonEvent, m_userInputWindow);
 		switch (GetEventKind(*carbonEvent)) {
@@ -1116,7 +1116,7 @@ COSXScreen::handleSystemEvent(const CEvent& event, void*)
 	}
 }
 
-bool 
+bool
 COSXScreen::onMouseMove(SInt32 mx, SInt32 my)
 {
 	LOG((CLOG_DEBUG2 "mouse move %+d,%+d", mx, my));
@@ -1166,7 +1166,7 @@ COSXScreen::onMouseMove(SInt32 mx, SInt32 my)
 	return true;
 }
 
-bool				
+bool
 COSXScreen::onMouseButton(bool pressed, UInt16 macButton)
 {
 	// Buttons 2 and 3 are inverted on the mac
@@ -1202,7 +1202,7 @@ COSXScreen::onMouseButton(bool pressed, UInt16 macButton)
 			}
 		}
 	}
-	
+
 	if (macButton == kButtonLeft) {
 		MouseButtonState state = pressed ? kMouseButtonDown : kMouseButtonUp;
 		m_buttonState.set(kButtonLeft - 1, state);
@@ -1215,7 +1215,7 @@ COSXScreen::onMouseButton(bool pressed, UInt16 macButton)
 				m_getDropTargetThread = new CThread(new TMethodJob<COSXScreen>(
 																			   this, &COSXScreen::getDropTargetThread));
 			}
-			
+
 			m_draggingStarted = false;
 		}
 	}
@@ -1238,7 +1238,7 @@ COSXScreen::handleClipboardCheck(const CEvent&, void*)
 }
 
 #if !defined(MAC_OS_X_VERSION_10_5)
-pascal void 
+pascal void
 COSXScreen::displayManagerCallback(void* inUserData, SInt16 inMessage, void*)
 {
 	COSXScreen* screen = (COSXScreen*)inUserData;
@@ -1273,23 +1273,23 @@ COSXScreen::onDisplayChange()
 	return true;
 }
 #else
-void 
+void
 COSXScreen::displayReconfigurationCallback(CGDirectDisplayID displayID, CGDisplayChangeSummaryFlags flags, void* inUserData)
 {
 	COSXScreen* screen = (COSXScreen*)inUserData;
 
 	// Closing or opening the lid when an external monitor is
     // connected causes an kCGDisplayBeginConfigurationFlag event
-	CGDisplayChangeSummaryFlags mask = kCGDisplayBeginConfigurationFlag | kCGDisplayMovedFlag | 
-		kCGDisplaySetModeFlag | kCGDisplayAddFlag | kCGDisplayRemoveFlag | 
-		kCGDisplayEnabledFlag | kCGDisplayDisabledFlag | 
-		kCGDisplayMirrorFlag | kCGDisplayUnMirrorFlag | 
+	CGDisplayChangeSummaryFlags mask = kCGDisplayBeginConfigurationFlag | kCGDisplayMovedFlag |
+		kCGDisplaySetModeFlag | kCGDisplayAddFlag | kCGDisplayRemoveFlag |
+		kCGDisplayEnabledFlag | kCGDisplayDisabledFlag |
+		kCGDisplayMirrorFlag | kCGDisplayUnMirrorFlag |
 		kCGDisplayDesktopShapeChangedFlag;
- 
+
 	LOG((CLOG_DEBUG1 "event: display was reconfigured: %x %x %x", flags, mask, flags & mask));
 
 	if (flags & mask) { /* Something actually did change */
-		
+
 		LOG((CLOG_DEBUG1 "event: screen changed shape; refreshing dimensions"));
 		screen->updateScreenShape(displayID, flags);
 	}
@@ -1339,7 +1339,7 @@ COSXScreen::onKey(CGEventRef event)
 				m_activeModifierHotKeyMask = 0;
 			}
 		}
-			
+
 		return true;
 	}
 
@@ -1349,12 +1349,12 @@ COSXScreen::onKey(CGEventRef event)
 	// so we check for a key/modifier match in our hot key map.
 	if (!m_isOnScreen) {
 		HotKeyToIDMap::const_iterator i =
-			m_hotKeyToIDMap.find(CHotKeyItem(virtualKey, 
-											 m_keyState->mapModifiersToCarbon(macMask) 
+			m_hotKeyToIDMap.find(CHotKeyItem(virtualKey,
+											 m_keyState->mapModifiersToCarbon(macMask)
 											 & 0xff00u));
 		if (i != m_hotKeyToIDMap.end()) {
 			UInt32 id = i->second;
-	
+
 			// determine event type
 			CEvent::Type type;
 			//UInt32 eventKind = GetEventKind(event);
@@ -1367,10 +1367,10 @@ COSXScreen::onKey(CGEventRef event)
 			else {
 				return false;
 			}
-	
+
 			m_events->addEvent(CEvent(type, getEventTarget(),
 										CHotKeyInfo::alloc(id)));
-		
+
 			return true;
 		}
 	}
@@ -1388,13 +1388,7 @@ COSXScreen::onKey(CGEventRef event)
 		return false;
 	}
 
-    if (m_isOnScreen){
-        LOG((CLOG_DEBUG "indika: on Wings"));
-    }
-    else
-    {
-        LOG((CLOG_DEBUG "indika: on Cobalt"));
-    }
+
 
 //    LOG((CLOG_DEBUG "indika: Button before %d", button));
 //    if (button == 51) {
@@ -1423,23 +1417,103 @@ COSXScreen::onKey(CGEventRef event)
 		m_keyState->onKey(button, false, mask);
 	}
 
+
+	// {
+
+
+
 	// send key events
 	for (COSXKeyState::CKeyIDs::const_iterator i = keys.begin();
 							i != keys.end(); ++i) {
 
+		// On Wings
+	    if (m_isOnScreen){
+	        LOG((CLOG_DEBUG "indika: on Wings"));
+	        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+	                *i, sendMask, 1, button);
+	    }
+	    // On Cobalt
+	    else
+	    {
+	    	if (sendMask == 0)
+	    	{
+		        if (button == 20)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND [..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 34);
+		        }
+		        else if (button == 21)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND {..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 1, 1, 34);
+		        }
+		        else if (button == 22)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND }..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 1, 1, 31);
+		        }
+		        else if (button == 24)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND ]..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 31);
+		        }
+		        else if (19 <= button && button <= 30){
+		            LOG((CLOG_DEBUG "indika: FOUND IT..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 1, 1, button);
+		        }
+		        else
+		        {
+			        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+			                *i, sendMask, 1, button);
+		        }
+	    	}
+	    	else if (sendMask == 1){
+		        if (button == 20)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND 2..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 0, 1, 20);
+		        }
+		        else if (button == 21)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND 3..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 0, 1, 21);
+		        }
+		        else if (button == 22)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND 4..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 0, 1, 22);
+		        }
+		        else if (button == 24)
+		        {
+		            LOG((CLOG_DEBUG "indika: FOUND 5..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, 0, 1, 24);
+		        }
+		        else
+		        {
+			        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+			                *i, sendMask, 1, button);
+		        }
+	    	}
+	    	else
+	    	{
+		        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                *i, sendMask, 1, button);
 
-        // Mucking around
-//        if (*i == 42){
-//            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-//                    42, 1, 1, button);
-//
-//        }
-//        else
-//        {
-        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
-                *i, sendMask, 1, button);
+	    	}
 
-        //}
+	    }
+
+        // m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+        //         *i, sendMask, 1, button);
 
         //LOG((CLOG_DEBUG "indika: Sending some id [id=%d]", *i));
         LOG((CLOG_DEBUG "indika: eventSend: [kind %d], [KeyId=%d] [keycode=%d] [KeyButton=%d]", eventKind, *i, virtualKey, button));
@@ -1478,7 +1552,7 @@ COSXScreen::onHotKey(EventRef event) const
 	return true;
 }
 
-ButtonID 
+ButtonID
 COSXScreen::mapMacButtonToSynergy(UInt16 macButton) const
 {
 	switch (macButton) {
@@ -1491,7 +1565,7 @@ COSXScreen::mapMacButtonToSynergy(UInt16 macButton) const
 	case 3:
 		return kButtonMiddle;
 	}
-	
+
 	return static_cast<ButtonID>(macButton);
 }
 
@@ -1518,8 +1592,8 @@ COSXScreen::getScrollSpeed() const
 	double scaling = 0.0;
 
 	CFPropertyListRef pref = ::CFPreferencesCopyValue(
-							CFSTR("com.apple.scrollwheel.scaling") , 
-							kCFPreferencesAnyApplication, 
+							CFSTR("com.apple.scrollwheel.scaling") ,
+							kCFPreferencesAnyApplication,
 							kCFPreferencesCurrentUser,
 							kCFPreferencesAnyHost);
 	if (pref != NULL) {
@@ -1569,7 +1643,7 @@ COSXScreen::handleDrag(const CEvent&, void*)
 {
 	Point p;
 	UInt32 modifiers;
-	MouseTrackingResult res; 
+	MouseTrackingResult res;
 
 	TrackMouseLocationWithOptions(NULL, 0, 0, &p, &modifiers, &res);
 
@@ -1608,7 +1682,7 @@ COSXScreen::updateScreenShape()
 	if (CGGetActiveDisplayList(0, NULL, &displayCount) != CGDisplayNoErr) {
 		return;
 	}
-	
+
 	if (displayCount == 0) {
 		return;
 	}
@@ -1652,13 +1726,13 @@ COSXScreen::updateScreenShape()
          (displayCount == 1) ? "display" : "displays"));
 }
 
-#pragma mark - 
+#pragma mark -
 
 //
 // FAST USER SWITCH NOTIFICATION SUPPORT
 //
 // COSXScreen::userSwitchCallback(void*)
-// 
+//
 // gets called if a fast user switch occurs
 //
 
@@ -1684,13 +1758,13 @@ COSXScreen::userSwitchCallback(EventHandlerCallRef nextHandler,
 	return (CallNextEventHandler(nextHandler, theEvent));
 }
 
-#pragma mark - 
+#pragma mark -
 
 //
 // SLEEP/WAKEUP NOTIFICATION SUPPORT
 //
 // COSXScreen::watchSystemPowerThread(void*)
-// 
+//
 // main of thread monitoring system power (sleep/wakup) using a CFRunLoop
 //
 
@@ -1714,7 +1788,7 @@ COSXScreen::watchSystemPowerThread(void*)
 		CFRunLoopAddSource(m_pmRunloop, runloopSourceRef,
 								kCFRunLoopCommonModes);
 	}
-	
+
 	// thread is ready
 	{
 		CLock lock(m_pmMutex);
@@ -1732,7 +1806,7 @@ COSXScreen::watchSystemPowerThread(void*)
 	LOG((CLOG_DEBUG "started watchSystemPowerThread"));
 
 	m_events->waitForReady();
-    
+
 #if defined(MAC_OS_X_VERSION_10_7)
 	{
 		CLock lockCarbon(m_carbonLoopMutex);
@@ -1742,11 +1816,11 @@ COSXScreen::watchSystemPowerThread(void*)
 		}
 	}
 #endif
-	
+
 	// start the run loop
 	LOG((CLOG_DEBUG "starting carbon loop"));
 	CFRunLoopRun();
-	
+
 	// cleanup
 	if (notificationPortRef) {
 		CFRunLoopRemoveSource(m_pmRunloop,
@@ -1781,7 +1855,7 @@ COSXScreen::handlePowerChangeRequest(natural_t messageType, void* messageArg)
 								getEventTarget(), messageArg,
 								CEvent::kDontFreeData));
 		return;
-			
+
 	case kIOMessageSystemHasPoweredOn:
 		LOG((CLOG_DEBUG "system wakeup"));
 		m_events->addEvent(CEvent(m_events->forIScreen().resume(),
@@ -1807,16 +1881,16 @@ COSXScreen::handleConfirmSleep(const CEvent& event, void*)
 		if (m_pmRootPort != 0) {
 			// deliver suspend event immediately.
 			m_events->addEvent(CEvent(m_events->forIScreen().suspend(),
-									getEventTarget(), NULL, 
+									getEventTarget(), NULL,
 									CEvent::kDeliverImmediately));
-	
+
 			LOG((CLOG_DEBUG "system will sleep"));
 			IOAllowPowerChange(m_pmRootPort, messageArg);
 		}
 	}
 }
 
-#pragma mark - 
+#pragma mark -
 
 //
 // GLOBAL HOTKEY OPERATING MODE SUPPORT (10.3)
@@ -2006,7 +2080,7 @@ COSXScreen::handleCGInputEvent(CGEventTapProxy proxy,
 		case kCGEventMouseMoved:
 			pos = CGEventGetLocation(event);
 			screen->onMouseMove(pos.x, pos.y);
-			
+
 			// The system ignores our cursor-centering calls if
 			// we don't return the event. This should be harmless,
 			// but might register as slight movement to other apps
@@ -2043,7 +2117,7 @@ COSXScreen::handleCGInputEvent(CGEventTapProxy proxy,
 		default:
 			LOG((CLOG_NOTE "unknown quartz event type: 0x%02x", type));
 	}
-	
+
 	if(screen->m_isOnScreen) {
 		return event;
 	} else {
@@ -2052,38 +2126,38 @@ COSXScreen::handleCGInputEvent(CGEventTapProxy proxy,
 }
 
 void
-COSXScreen::CMouseButtonState::set(UInt32 button, MouseButtonState state) 
+COSXScreen::CMouseButtonState::set(UInt32 button, MouseButtonState state)
 {
 	bool newState = (state == kMouseButtonDown);
 	m_buttons.set(button, newState);
 }
 
 bool
-COSXScreen::CMouseButtonState::any() 
+COSXScreen::CMouseButtonState::any()
 {
 	return m_buttons.any();
 }
 
 void
-COSXScreen::CMouseButtonState::reset() 
+COSXScreen::CMouseButtonState::reset()
 {
 	m_buttons.reset();
 }
 
 void
-COSXScreen::CMouseButtonState::overwrite(UInt32 buttons) 
+COSXScreen::CMouseButtonState::overwrite(UInt32 buttons)
 {
 	m_buttons = std::bitset<NumButtonIDs>(buttons);
 }
 
 bool
-COSXScreen::CMouseButtonState::test(UInt32 button) const 
+COSXScreen::CMouseButtonState::test(UInt32 button) const
 {
 	return m_buttons.test(button);
 }
 
 SInt8
-COSXScreen::CMouseButtonState::getFirstButtonDown() const 
+COSXScreen::CMouseButtonState::getFirstButtonDown() const
 {
 	if (m_buttons.any()) {
 		for (unsigned short button = 0; button < m_buttons.size(); button++) {
@@ -2101,7 +2175,7 @@ COSXScreen::CFStringRefToUTF8String(CFStringRef aString)
 	if (aString == NULL) {
 		return NULL;
 	}
-	
+
 	CFIndex length = CFStringGetLength(aString);
 	CFIndex maxSize = CFStringGetMaximumSizeForEncoding(
 		length,
