@@ -1543,6 +1543,13 @@ COSXScreen::onKey(CGEventRef event)
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
 		                    *i, sendMask, 1, 21);
 		        }
+		        else if (button == 13)
+		        {
+		            // LOG((CLOG_DEBUG "indika: FOUND :..."));
+		            sendMask |= 1 << 0;
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 13);
+		        }
 		        else
 		        {
 			        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
@@ -1633,6 +1640,13 @@ COSXScreen::onKey(CGEventRef event)
 		            LOG((CLOG_DEBUG "indika: FOUND `..."));
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
 		                    *i, sendMask, 1, 51);
+		        }
+		        else if (button == 13)
+		        {
+		        	sendMask &= ~(1 << 0);
+		            LOG((CLOG_DEBUG "indika: FOUND ;..."));
+		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		                    *i, sendMask, 1, 13);
 		        }
 		        else
 		        {

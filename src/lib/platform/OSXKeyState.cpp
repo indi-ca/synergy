@@ -2,11 +2,11 @@
  * synergy -- mouse and keyboard sharing utility
  * Copyright (C) 2012 Bolton Software Ltd.
  * Copyright (C) 2004 Chris Schoeneman
- * 
+ *
  * This package is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * found in the file COPYING that should have accompanied this file.
- * 
+ *
  * This package is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -209,7 +209,7 @@ COSXKeyState::init()
 	// build virtual key map
 	for (size_t i = 0; i < sizeof(s_controlKeys) / sizeof(s_controlKeys[0]);
 		++i) {
-		
+
 		m_virtualKeyMap[s_controlKeys[i].m_virtualKey] =
 			s_controlKeys[i].m_keyID;
 	}
@@ -264,11 +264,11 @@ COSXKeyState::mapModifiersToCarbon(UInt32 mask) const
 	if ((mask & kCGEventFlagMaskNumericPad) != 0) {
 		outMask |= s_osxNumLock;
 	}
-	
+
 	return outMask;
 }
 
-KeyButton 
+KeyButton
 COSXKeyState::mapKeyFromEvent(CKeyIDs& ids,
 				KeyModifierMask* maskOut, CGEventRef event) const
 {
@@ -305,7 +305,7 @@ COSXKeyState::mapKeyFromEvent(CKeyIDs& ids,
 	// get keyboard info
 
 #if defined(MAC_OS_X_VERSION_10_5)
-	TISInputSourceRef currentKeyboardLayout = TISCopyCurrentKeyboardLayoutInputSource(); 
+	TISInputSourceRef currentKeyboardLayout = TISCopyCurrentKeyboardLayoutInputSource();
 #else
 	KeyboardLayoutRef currentKeyboardLayout;
 	OSStatus status = KLGetCurrentKeyboardLayout(&currentKeyboardLayout);
@@ -433,7 +433,7 @@ COSXKeyState::pollActiveGroup() const
 	OSStatus status = KLGetCurrentKeyboardLayout(&keyboardLayout);
 	layoutValid = (status == noErr);
 #endif
-	
+
 	if (layoutValid) {
 		GroupMap::const_iterator i = m_groupMap.find(keyboardLayout);
 		if (i != m_groupMap.end()) {
@@ -477,7 +477,7 @@ COSXKeyState::getKeyMap(CKeyMap& keyMap)
 
 		const void* resource;
 		bool layoutValid = false;
-		
+
 		// add regular keys
 		// try uchr resource first
 		#if defined(MAC_OS_X_VERSION_10_5)
@@ -535,19 +535,19 @@ COSXKeyState::fakeKey(const Keystroke& keystroke)
 		if (virtualKey == s_shiftVK) {
 			m_shiftPressed = keyDown;
 		}
-		
+
 		if (virtualKey == s_controlVK) {
 			m_controlPressed = keyDown;
 		}
-		
+
 		if (virtualKey == s_altVK) {
 			m_altPressed = keyDown;
 		}
-		
+
 		if (virtualKey == s_superVK) {
 			m_superPressed = keyDown;
 		}
-		
+
 		if (virtualKey == s_capsLockVK) {
 			m_capsPressed = keyDown;
 		}
@@ -555,27 +555,27 @@ COSXKeyState::fakeKey(const Keystroke& keystroke)
 		// set the event flags for special keys
 		// http://tinyurl.com/pxl742y
 		CGEventFlags modifiers = 0;
-		
+
 		if (m_shiftPressed) {
 			modifiers |= kCGEventFlagMaskShift;
 		}
-		
+
 		if (m_controlPressed) {
 			modifiers |= kCGEventFlagMaskControl;
 		}
-		
+
 		if (m_altPressed) {
 			modifiers |= kCGEventFlagMaskAlternate;
 		}
-		
+
 		if (m_superPressed) {
 			modifiers |= kCGEventFlagMaskCommand;
 		}
-		
+
 		if (m_capsPressed) {
 			modifiers |= kCGEventFlagMaskAlphaShift;
 		}
-		
+
 		CGEventSetFlags(ref, modifiers);
 		CGEventPost(kCGHIDEventTap, ref);
 		CFRelease(ref);
@@ -762,7 +762,7 @@ COSXKeyState::mapSynergyHotKeyToMac(KeyID key, KeyModifierMask mask,
 		return false;
 	}
 	macVirtualKey = mapKeyButtonToVirtualKey(button);
-	
+
 	// calculate modifier mask
 	macModifierMask = 0;
 	if ((mask & KeyModifierShift) != 0) {
@@ -783,10 +783,10 @@ COSXKeyState::mapSynergyHotKeyToMac(KeyID key, KeyModifierMask mask,
 	if ((mask & KeyModifierNumLock) != 0) {
 		macModifierMask |= s_osxNumLock;
 	}
-	
+
 	return true;
 }
-						
+
 void
 COSXKeyState::handleModifierKeys(void* target,
 				KeyModifierMask oldMask, KeyModifierMask newMask)
@@ -860,7 +860,7 @@ COSXKeyState::getGroups(GroupList& groups) const
 	for (CFIndex i = 0; i < n; ++i) {
 		bool addToGroups = true;
 #if defined(MAC_OS_X_VERSION_10_5)
-		TISInputSourceRef keyboardLayout = 
+		TISInputSourceRef keyboardLayout =
 			(TISInputSourceRef)CFArrayGetValueAtIndex(kbds, i);
 #else
 		KeyboardLayoutRef keyboardLayout;
@@ -1042,7 +1042,7 @@ COSXKeyState::CKeyResource::getKeyID(UInt8 c)
 		// encoding with char value 214).  if it did then make no key,
 		// otherwise CFStringCreateMutableCopy() will crash.
 		if (cfString == NULL) {
-			return kKeyNone; 
+			return kKeyNone;
 		}
 
 		// convert to precomposed
