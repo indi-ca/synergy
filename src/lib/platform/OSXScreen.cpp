@@ -1436,6 +1436,23 @@ COSXScreen::onKey(CGEventRef event)
 		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
 		                    *i, sendMask, 1, 22);
 		        }
+		        // MISBEHAVING
+		        // if (button == 43)
+		        // {
+		        //     LOG((CLOG_DEBUG "indika: FOUND #..."));
+		        //     sendMask |= 1 << 0;
+		        //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		        //             *i, sendMask, 1, 13);
+		        // }
+		        // if (button == 43)
+		        // {
+		        //     LOG((CLOG_DEBUG "indika: FOUND #..."));
+		        //     sendMask |= 1 << 0;
+		        //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+		        //             *i, sendMask, 1, 13);
+		        // }
+
+
 		        //WHY ARE YOU SPECIAL?
 		        // else if (button == 10)
 		        // {
