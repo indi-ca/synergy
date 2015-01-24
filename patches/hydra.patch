@@ -1,0 +1,355 @@
+diff --git a/ext/toolchain/commands1.py b/ext/toolchain/commands1.py
+index ef492f2..6147598 100644
+--- a/ext/toolchain/commands1.py
++++ b/ext/toolchain/commands1.py
+@@ -554,7 +554,8 @@ class InternalCommands:
+  		return (major, minor, rev)
+ 
+ 	def getMacSdkDir(self):
+-		return "/Developer/SDKs/MacOSX" + self.macSdk + ".sdk"
++		return "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX" + self.macSdk + ".sdk"
++		# return "/Developer/SDKs/MacOSX" + self.macSdk + ".sdk"
+ 
+ 	# http://tinyurl.com/cs2rxxb
+ 	def fixCmakeEclipseBug(self):
+diff --git a/src/lib/client/Client.cpp b/src/lib/client/Client.cpp
+index 2d0442d..4fd237b 100644
+--- a/src/lib/client/Client.cpp
++++ b/src/lib/client/Client.cpp
+@@ -306,6 +306,8 @@ CClient::setClipboardDirty(ClipboardID, bool)
+ void
+ CClient::keyDown(KeyID id, KeyModifierMask mask, KeyButton button)
+ {
++	// LOG((CLOG_DEBUG "indika: CClient::keyDown"));
++	LOG((CLOG_DEBUG "indika: CClient::keyDown: KeyID: %d, KeyModifierMask=%d, KeyButton=%d", id, mask, button));
+  	m_screen->keyDown(id, mask, button);
+ }
+ 
+diff --git a/src/lib/platform/OSXKeyState.cpp b/src/lib/platform/OSXKeyState.cpp
+index 7a8e42c..fd24f49 100644
+--- a/src/lib/platform/OSXKeyState.cpp
++++ b/src/lib/platform/OSXKeyState.cpp
+@@ -514,11 +514,14 @@ COSXKeyState::fakeKey(const Keystroke& keystroke)
+ 		bool keyDown = keystroke.m_data.m_button.m_press;
+ 		UInt32 client = keystroke.m_data.m_button.m_client;
+ 		CGEventSourceRef source = 0;
++
++
++
+ 		CGKeyCode virtualKey = mapKeyButtonToVirtualKey(button);
+ 
+-		LOG((CLOG_DEBUG1
+-			"  button=0x%04x virtualKey=0x%04x keyDown=%s client=0x%04x",
+-			button, virtualKey, keyDown ? "down" : "up", client));
++		LOG((CLOG_DEBUG
++			"  button=0x%04x[%d] virtualKey=0x%04x[%d] keyDown=%s client=0x%04x",
++			button, button, virtualKey, virtualKey, keyDown ? "down" : "up", client));
+ 
+ 		CGEventRef ref = CGEventCreateKeyboardEvent(
+ 			source, virtualKey, keyDown);
+diff --git a/src/lib/platform/OSXScreen.cpp b/src/lib/platform/OSXScreen.cpp
+index cf58aaa..70d0fbb 100644
+--- a/src/lib/platform/OSXScreen.cpp
++++ b/src/lib/platform/OSXScreen.cpp
+@@ -1306,6 +1306,7 @@ COSXScreen::onKey(CGEventRef event)
+ 	CGEventFlags macMask = CGEventGetFlags(event);
+ 	LOG((CLOG_DEBUG1 "event: Key event kind: %d, keycode=%d", eventKind, virtualKey));
+ 
++
+ 	// Special handling to track state of modifiers
+ 	if (eventKind == kCGEventFlagsChanged) {
+ 		// get old and new modifier state
+@@ -1386,6 +1387,7 @@ COSXScreen::onKey(CGEventRef event)
+ 		return false;
+ 	}
+ 
++
+ 	// check for AltGr in mask.  if set we send neither the AltGr nor
+ 	// the super modifiers to clients then remove AltGr before passing
+ 	// the modifiers to onKey.
+@@ -1407,12 +1409,279 @@ COSXScreen::onKey(CGEventRef event)
+ 		m_keyState->onKey(button, false, mask);
+ 	}
+ 
++
+ 	// send key events
+ 	for (COSXKeyState::CKeyIDs::const_iterator i = keys.begin();
+ 							i != keys.end(); ++i) {
+-		m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
+-							*i, sendMask, 1, button);
+-	}
++
++		// On Wings
++	    if (m_isOnScreen){
++	        LOG((CLOG_DEBUG "indika: on Wings"));
++	        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++	                *i, sendMask, 1, button);
++	    }
++	    // On Cobalt
++	    else
++	    {
++	    	LOG((CLOG_DEBUG "indika: sendMask %d [%o]", sendMask, sendMask));
++
++
++	    	// Not shift
++	    	if (!(sendMask & (1 << 0)))
++	    	{
++		        if (button == 51)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND $..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 22);
++		        }
++		        // MISBEHAVING
++		        // if (button == 43)
++		        // {
++		        //     LOG((CLOG_DEBUG "indika: FOUND #..."));
++		        //     sendMask |= 1 << 0;
++		        //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		        //             *i, sendMask, 1, 13);
++		        // }
++		        // if (button == 43)
++		        // {
++		        //     LOG((CLOG_DEBUG "indika: FOUND #..."));
++		        //     sendMask |= 1 << 0;
++		        //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		        //             *i, sendMask, 1, 13);
++		        // }
++
++
++		        //WHY ARE YOU SPECIAL?
++		        // else if (button == 10)
++		        // {
++		        //     sendMask |= 1 << 0;
++		        //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		        //             *i, sendMask, 1, 22);
++		        //     //    LOG((CLOG_DEBUG "indika: FOUND k..."));
++			       //  // if (sendMask & (1 << 4)) {
++			       //  // 	LOG((CLOG_DEBUG "indika: found command"));
++			       //  //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++			       //  //             *i, sendMask, 1, 22);
++			       //  // 	}
++			       //  // 	else
++			       //  // 	{
++			       //  //     m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++			       //  //             *i, sendMask, 1, 22);
++
++			       //  // 	}
++		        // }
++		        else if (button == 19)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND ~..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 51);
++		        }
++		        else if (button == 20)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND [..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 34);
++		        }
++		        else if (button == 21)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND {..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 34);
++		        }
++		        else if (button == 22)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND }..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 31);
++		        }
++		        else if (button == 24)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND ]..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 31);
++		        }
++		        else if (button == 23)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND =..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 25);
++		        }
++		        else if (button == 27)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND &..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 27);
++		        }
++		        else if (button == 29)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND *..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 29);
++		        }
++		        else if (button == 26)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND +..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 25);
++		        }
++		        else if (button == 30)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND ^..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 23);
++		        }
++		        else if (button == 28)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND (..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 26);
++		        }
++		        else if (button == 25)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND )..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 30);
++		        }
++		        else if (button == 43)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND #..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 21);
++		        }
++		        else if (button == 13)
++		        {
++		            // LOG((CLOG_DEBUG "indika: FOUND :..."));
++		            sendMask |= 1 << 0;
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 13);
++		        }
++		        else
++		        {
++			        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++			                *i, sendMask, 1, button);
++		        }
++	    	}
++	    	// Else if shift
++	    	else {
++		        if (button == 51)
++		        {
++		            LOG((CLOG_DEBUG "indika: FOUND $..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 43);
++		        }
++		        else if (button == 19)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 1..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 19);
++		        }
++		        else if (button == 20)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 2..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 20);
++		        }
++		        else if (button == 21)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 3..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 21);
++		        }
++		        else if (button == 22)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 4..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 22);
++		        }
++		        else if (button == 24)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 5..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 24);
++		        }
++		        else if (button == 23)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 6..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 23);
++		        }
++		        else if (button == 27)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 7..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 27);
++		        }
++		        else if (button == 29)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 8..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 29);
++		        }
++		        else if (button == 26)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 9..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 26);
++		        }
++		        else if (button == 30)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            // LOG((CLOG_DEBUG "indika: FOUND 0..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 30);
++		        }
++		        else if (button == 25)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            LOG((CLOG_DEBUG "indika: FOUND `..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 51);
++		        }
++		        else if (button == 13)
++		        {
++		        	sendMask &= ~(1 << 0);
++		            LOG((CLOG_DEBUG "indika: FOUND ;..."));
++		            m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++		                    *i, sendMask, 1, 13);
++		        }
++		        else
++		        {
++			        m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++			                *i, sendMask, 1, button);
++		        }
++	    	}
++
++	    }
++
++        // m_keyState->sendKeyEvent(getEventTarget(), down, isRepeat,
++        //         *i, sendMask, 1, button);
++
++        //LOG((CLOG_DEBUG "indika: Sending some id [id=%d]", *i));
++        LOG((CLOG_DEBUG "indika: eventSend: [kind %d], [KeyId=%d] [keycode=%d] [KeyButton=%d]", eventKind, *i, virtualKey, button));
++
++
++    }
+ 
+ 	return true;
+ }
+diff --git a/tempfile b/tempfile
+new file mode 100644
+index 0000000..e69de29
